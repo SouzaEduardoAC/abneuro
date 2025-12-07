@@ -68,9 +68,9 @@ import anaImage from '@/assets/foto_ana_benin.png'
               <div>
                 <h5>Membro das Sociedades</h5>
                 <span>Sociedade Brasileira de Cefaleia (SBCe)</span>
-                <br></br>
+                <br />
                 <span>Sociedade Internacional de Neuromodulação (INS)</span>
-                <br></br>
+                <br />
                 <span>Academia Brasileira de Neurologia (ABN)</span>
               </div>
             </div>

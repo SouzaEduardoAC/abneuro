@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useHead } from '@unhead/vue' // Supondo uso de Unhead ou Nuxt para meta tags
 
 // Configuração de Meta Tags para SEO
@@ -14,7 +14,7 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      children: JSON.stringify({
+      innerHTML: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Physician",
         "name": "Dra. Ana Caroline Benin",
