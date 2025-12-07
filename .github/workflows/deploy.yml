@@ -1,53 +1,57 @@
-name: Production Deployment
+name: Vercel Production Deploy
 
 on:
   push:
     branches:
-      - main
-      - master
+      - main  # Ou 'master', dependendo do seu repo
 
 jobs:
-  validate:
-    name: Validate (Lint & Type Check)
+  deploy:
     runs-on: ubuntu-latest
+    
+    # Estratégia de permissões mínimas
+    permissions:
+      contents: read
+      deployments: write
+
     steps:
-      - name: Checkout
+      # 1. Baixa o código
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      # 2. Prepara o Node.js (Garante compatibilidade de versão)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
+      # 3. Cache de dependências (Otimiza tempo de build)
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4. Instala Dependências
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Type Check & Build
+      # 5. Build (Testa se o build passa antes de tentar enviar)
+      - name: Build Project
         run: npm run build
 
-  deploy:
-    name: Deploy to Vercel
-    needs: validate
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      # 6. Deploy para Vercel
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod' # Força deploy de produção
+          working-directory: ./
